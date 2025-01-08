@@ -27,5 +27,13 @@ namespace Migration.Common.Config
 
         [JsonProperty("mapping")]
         public Mapping Mapping { get; set; }
+
+        [JsonProperty("pattern-from")]
+        public string PatternFrom { get; set; }
+
+        [JsonProperty("pattern-to")]
+        public string PatternTo { get; set; }
+
+
     }
 }

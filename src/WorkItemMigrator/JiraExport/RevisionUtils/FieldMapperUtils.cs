@@ -201,6 +201,35 @@ namespace JiraExport
             return iterationPath;
         }
 
+        public static (bool, object) MapSprintExtended(JiraRevision r, string sourceField, bool isCustomField, string customFieldName, ConfigJson config)
+        {
+            if (r == null)
+                throw new ArgumentNullException(nameof(r));
+
+            if (config == null)
+                throw new ArgumentNullException(nameof(config));
+
+            var targetField = (from f in config.FieldMap.Fields where f.Source == sourceField select f).FirstOrDefault();
+            if (targetField == null)
+                return (false, null);
+
+            sourceField = SetCustomFieldName(sourceField, isCustomField, customFieldName);
+
+            var hasFieldValue = r.Fields.TryGetValue(sourceField, out object value);
+            if (!hasFieldValue)
+                return (false, null);
+
+            var iterationPathInitial = (string)value;
+
+            var iterationPathTemporary = MapSprint(iterationPathInitial);
+            if (iterationPathTemporary == null)
+                return (false, null);
+
+            var iterationPathFinal = Regex.Replace((string)iterationPathTemporary, targetField.PatternFrom, targetField.PatternTo);
+            return (true, iterationPathFinal);
+        }
+
+
         private static readonly Dictionary<string, decimal> CalculatedLexoRanks = new Dictionary<string, decimal>();
         private static readonly Dictionary<decimal, string> CalculatedRanks = new Dictionary<decimal, string>();
 
