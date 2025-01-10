@@ -58,7 +58,7 @@ namespace JiraExport
                 return (false, null);
         }
 
-        public static (bool, object) MapValue(JiraRevision r, string itemSource, string itemTarget, ConfigJson config, ExportIssuesSummary exportIssuesSummary)
+        public static (bool, object) MapValue(JiraRevision r, string itemSource, string itemTarget, ConfigJson config, string customFieldName, ExportIssuesSummary exportIssuesSummary)
         {
             if (r == null)
                 throw new ArgumentNullException(nameof(r));
@@ -69,9 +69,12 @@ namespace JiraExport
             var targetWit = (from t in config.TypeMap.Types where t.Source == r.Type select t.Target).FirstOrDefault();
 
             var hasFieldValue = r.Fields.TryGetValue(itemSource, out object value);
-
             if (!hasFieldValue)
-                return (false, null);
+            {
+                hasFieldValue = r.Fields.TryGetValue(customFieldName, out value);
+                if (!hasFieldValue)
+                    return (false, null);
+            }
 
             foreach (var item in config.FieldMap.Fields.Where(i => i.Mapping?.Values != null))
             {
