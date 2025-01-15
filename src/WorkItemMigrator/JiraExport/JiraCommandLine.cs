@@ -37,6 +37,7 @@ namespace JiraExport
 
             CommandOption userOption = commandLineApplication.Option("-u <username>", "Username for authentication", CommandOptionType.SingleValue);
             CommandOption passwordOption = commandLineApplication.Option("-p <password>", "Password for authentication", CommandOptionType.SingleValue);
+            CommandOption credentialOption = commandLineApplication.Option("--cred", "Use Windows Credential Manager for password", CommandOptionType.NoValue);
             CommandOption tokenOption = commandLineApplication.Option("-t <token>", "Bearer token for OAuth2 authentication", CommandOptionType.SingleValue);
             CommandOption urlOption = commandLineApplication.Option("--url <accounturl>", "Url for the account", CommandOptionType.SingleValue);
             CommandOption configOption = commandLineApplication.Option("--config <configurationfilename>", "Export the work items based on this configuration file", CommandOptionType.SingleValue);
@@ -50,6 +51,10 @@ namespace JiraExport
 
                 if (configOption.HasValue())
                 {
+                    if (credentialOption.HasValue())
+                    {
+                        if (!LoadFromCredentialManager(userOption, passwordOption)) return -1;
+                    }
                     succeeded = ExecuteMigration(userOption, passwordOption, tokenOption, urlOption, configOption, forceFresh, continueOnCriticalOption);
                 }
                 else
@@ -59,6 +64,37 @@ namespace JiraExport
 
                 return succeeded ? 0 : -1;
             });
+        }
+
+        private static bool LoadFromCredentialManager(CommandOption userOption, CommandOption passwordOption)
+        {
+            var rememberMe = true;
+            var cred = AdysTech.CredentialManager.CredentialManager.GetCredentials("JiraExport");
+            if (cred == null)
+            {
+                cred = AdysTech.CredentialManager.CredentialManager.PromptForCredentials("JiraExport",
+                    ref rememberMe, "Please enter your Jira credentials", "JiraExport");
+                if (rememberMe)
+                {
+                    var cred2 = AdysTech.CredentialManager.CredentialManager.SaveCredentials("JiraExport", cred);
+                    if (cred2 == null)
+                    {
+                        Logger.Log(LogLevel.Error, "Failed to save credentials in Windows Credential Manager.");
+                        return false;
+                    }
+                }
+            }
+
+            if (cred == null)
+            {
+                Logger.Log(LogLevel.Error, "No credentials found in Windows Credential Manager.");
+                return false;
+            }
+            userOption.Values.Clear();
+            userOption.Values.Add(cred.UserName);
+            passwordOption.Values.Clear();
+            passwordOption.Values.Add(cred.Password);
+            return true;
         }
 
         private bool ExecuteMigration(CommandOption user, CommandOption password, CommandOption token, CommandOption url, CommandOption configFile, bool forceFresh, CommandOption continueOnCritical)
