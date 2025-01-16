@@ -116,6 +116,8 @@ namespace JiraExport
             var fieldName = sourceField + "$Rendered";
 
             var targetWit = (from t in config.TypeMap.Types where t.Source == r.Type select t.Target).FirstOrDefault();
+            if (targetWit == null)
+                return (false, null);
 
             var hasFieldValue = r.Fields.TryGetValue(fieldName, out object value);
             if (!hasFieldValue)
