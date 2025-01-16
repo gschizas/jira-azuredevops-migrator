@@ -245,7 +245,7 @@ namespace JiraExport
                     {
                         if (index == 0)
                         {
-                            Logger.Log(LogLevel.Warning, $"No issuse were found using jql: {jql}");
+                            Logger.Log(LogLevel.Warning, $"No issues were found using jql: {jql}");
                         }
                         break;
                     }
