@@ -42,6 +42,7 @@ namespace WorkItemImport
             commandLineApplication.Name = "wi-import";
 
             CommandOption tokenOption = commandLineApplication.Option("--token <accesstoken>", "Personal access token to use for authentication", CommandOptionType.SingleValue);
+            CommandOption credentialOption = commandLineApplication.Option("--cred", "Use Windows Credential Manager for password", CommandOptionType.NoValue);
             CommandOption urlOption = commandLineApplication.Option("--url <accounturl>", "Url for the account", CommandOptionType.SingleValue);
             CommandOption configOption = commandLineApplication.Option("--config <configurationfilename>", "Import the work items based on the configuration file", CommandOptionType.SingleValue);
             CommandOption forceOption = commandLineApplication.Option("--force", "Forces execution from start (instead of continuing from previous run)", CommandOptionType.NoValue);
@@ -53,6 +54,11 @@ namespace WorkItemImport
                 bool succeeded = true;
                 if (configOption.HasValue())
                 {
+                    if (credentialOption.HasValue())
+                    {
+                        if (!LoadFromCredentialManager(tokenOption)) return -1;
+                    }
+
                     succeeded = ExecuteMigration(tokenOption, urlOption, configOption, forceFresh, continueOnCriticalOption);
                 }
                 else
@@ -63,7 +69,26 @@ namespace WorkItemImport
                 return succeeded ? 0 : -1;
             });
         }
+        private static bool LoadFromCredentialManager(CommandOption tokenOption)
+        {
+            const string credentialName = "Azure DevOps Import";
+            var cred = AdysTech.CredentialManager.CredentialManager.GetCredentials(credentialName);
+            if (cred == null)
+            {
+                Console.WriteLine("Please enter your Azure DevOps token (the username field doesn't matter)");
+                cred = AdysTech.CredentialManager.CredentialManager.PromptForCredentialsConsole(credentialName);
+            }
 
+            if (cred == null)
+            {
+                Logger.Log(LogLevel.Error, "No credentials found in Windows Credential Manager.");
+                return false;
+            }
+
+            tokenOption.Values.Clear();
+            tokenOption.Values.Add(cred.Password);
+            return true;
+        }
         private bool ExecuteMigration(CommandOption token, CommandOption url, CommandOption configFile, bool forceFresh, CommandOption continueOnCritical)
         {
             ConfigJson config = null;
@@ -178,7 +203,7 @@ namespace WorkItemImport
                             importedItems = DeferItem(importedItems, executionItem);
                         }
 
-                        // Artifical wait (optional) to avoid throttling for ADO Services
+                        // Artificial wait (optional) to avoid throttling for ADO Services
                         if (config.SleepTimeBetweenRevisionImportMilliseconds > 0)
                         {
                             Thread.Sleep(config.SleepTimeBetweenRevisionImportMilliseconds);
