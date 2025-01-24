@@ -314,6 +314,7 @@ namespace JiraExport
 
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(htmlValue);
+            ReplaceEmoticonImages(htmlDoc);
             htmlValue = htmlDoc.DocumentNode.OuterHtml;
 
 
@@ -327,6 +328,57 @@ namespace JiraExport
             }
 
             return htmlValue;
+        }
+
+        private static void ReplaceEmoticonImages(HtmlDocument htmlDoc)
+        {
+            var emoticonImages = htmlDoc.DocumentNode.SelectNodes("//img[contains(@class, 'emoticon')]");
+
+            if (emoticonImages == null) return;
+
+            foreach (var image in emoticonImages)
+            {
+                var emojiCharacter = GetEmoticonCharacter(image.Attributes["src"]?.Value);
+                image.ParentNode.ReplaceChild(HtmlNode.CreateNode(emojiCharacter), image);
+            }
+
+            return;
+
+            static string GetEmoticonCharacter(string imageSource)
+            {
+                if (imageSource == null)
+                    return "";
+                var emojiName = Path.GetFileNameWithoutExtension(new Uri(imageSource).LocalPath);
+                return emojiName switch
+                {
+                    "add" => "➕",
+                    "biggrin" => "😁",
+                    "check" => "✅",
+                    "error" => "❌",
+                    "flag_grey" => "🏳️",
+                    "flag" => "🚩",
+                    "forbidden" => "⛔",
+                    "group_16" => "👥",
+                    "help_16" => "❓",
+                    "information" => "ℹ️",
+                    "lightbulb_on" => "💡",
+                    "lightbulb" => "⭕",
+                    "sad" => "☹️",
+                    "smile" => "🙂",
+                    "star_blue" => "💙",
+                    "star_green" => "💚",
+                    "star_red" => "❤️",
+                    "star_yellow" => "💛",
+                    "thumbs_down" => "👎",
+                    "thumbs_up" => "👍",
+                    "tongue" => "😛",
+                    "user_16" => "👤",
+                    "user_bw_16" => "👤",
+                    "warning" => "⚠️",
+                    "wink" => "😉",
+                    _ => "🚫"
+                };
+            }
         }
 
         private static string ReadEmbeddedFile(string resourceName)
