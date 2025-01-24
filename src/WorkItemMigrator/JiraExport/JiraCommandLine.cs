@@ -72,17 +72,8 @@ namespace JiraExport
             var cred = AdysTech.CredentialManager.CredentialManager.GetCredentials("JiraExport");
             if (cred == null)
             {
-                cred = AdysTech.CredentialManager.CredentialManager.PromptForCredentials("JiraExport",
-                    ref rememberMe, "Please enter your Jira credentials", "JiraExport");
-                if (rememberMe)
-                {
-                    var cred2 = AdysTech.CredentialManager.CredentialManager.SaveCredentials("JiraExport", cred);
-                    if (cred2 == null)
-                    {
-                        Logger.Log(LogLevel.Error, "Failed to save credentials in Windows Credential Manager.");
-                        return false;
-                    }
-                }
+                Console.WriteLine("Please enter your Jira credentials");
+                cred = AdysTech.CredentialManager.CredentialManager.PromptForCredentialsConsole("JiraExport");
             }
 
             if (cred == null)
