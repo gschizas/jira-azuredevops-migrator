@@ -315,6 +315,7 @@ namespace JiraExport
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(htmlValue);
             ReplaceEmoticonImages(htmlDoc);
+            ReplaceRenderedIcons(htmlDoc);
             htmlValue = htmlDoc.DocumentNode.OuterHtml;
 
 
@@ -377,6 +378,32 @@ namespace JiraExport
                     "warning" => "⚠️",
                     "wink" => "😉",
                     _ => "🚫"
+                };
+            }
+        }
+
+        private static void ReplaceRenderedIcons(HtmlDocument htmlDoc)
+        {
+            var renderIcons = htmlDoc.DocumentNode.SelectNodes("//img[contains(@class, 'rendericon')]");
+            if (renderIcons == null) return;
+
+            foreach (var image in renderIcons)
+            {
+                var emojiCharacter = GetRenderIconCharacter(image.Attributes["src"]?.Value);
+                image.ParentNode.ReplaceChild(HtmlNode.CreateNode(emojiCharacter), image);
+            }
+
+            return;
+
+            string GetRenderIconCharacter(string imageSource)
+            {
+                if (imageSource == null)
+                    return "";
+                var iconName = Path.GetFileNameWithoutExtension(new Uri(imageSource).LocalPath);
+                return iconName switch
+                {
+                    "link_attachment_7" => "↘️",
+                    _ => "❓"
                 };
             }
         }
