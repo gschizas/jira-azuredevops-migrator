@@ -594,7 +594,7 @@ namespace WorkItemImport
             {
                 attachmentUpdatedDate = workItemChangedDate;
                 // The work item ChangeDate is altered when saving the attachment, make sure the Revision time does too.
-                // Otherwise it will not be an increased ChangedDate and we'll get an exception
+                // Otherwise, it will not be an increased ChangedDate, and we'll get an exception
                 rev.Time = workItemChangedDate;
             }
 
