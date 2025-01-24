@@ -1,5 +1,6 @@
 ﻿using Atlassian.Jira;
 using Common.Config;
+using HtmlAgilityPack;
 using JiraExport.RevisionUtils;
 using Migration.Common;
 using Migration.Common.Config;
@@ -310,6 +311,11 @@ namespace JiraExport
             }
 
             htmlValue = RevisionUtility.ReplaceHtmlElements(htmlValue);
+
+            var htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(htmlValue);
+            htmlValue = htmlDoc.DocumentNode.OuterHtml;
+
 
             if (includeJiraStyle)
             {
