@@ -316,6 +316,7 @@ namespace JiraExport
             htmlDoc.LoadHtml(htmlValue);
             ReplaceEmoticonImages(htmlDoc);
             ReplaceRenderedIcons(htmlDoc);
+            ReplaceFontTagsWithSpan(htmlDoc);
             htmlValue = htmlDoc.DocumentNode.OuterHtml;
 
 
@@ -405,6 +406,23 @@ namespace JiraExport
                     "link_attachment_7" => "↘️",
                     _ => "❓"
                 };
+            }
+        }
+
+        private static void ReplaceFontTagsWithSpan(HtmlDocument htmlDoc)
+        {
+            var fontNodes = htmlDoc.DocumentNode.SelectNodes("//font");
+            if (fontNodes == null) return;
+
+            foreach (var fontNode in fontNodes)
+            {
+                var spanNode = HtmlNode.CreateNode("<span></span>");
+                if (fontNode.Attributes["color"] != null)
+                {
+                    spanNode.Attributes.Add("style", $"color: {fontNode.Attributes["color"].Value};");
+                }
+                spanNode.InnerHtml = fontNode.InnerHtml;
+                fontNode.ParentNode.ReplaceChild(spanNode, fontNode);
             }
         }
 
