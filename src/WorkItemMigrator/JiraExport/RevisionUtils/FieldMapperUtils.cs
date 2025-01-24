@@ -231,7 +231,18 @@ namespace JiraExport
                 return (false, null);
 
             var iterationPathFinal = Regex.Replace((string)iterationPathTemporary, targetField.PatternFrom, targetField.PatternTo);
-            return (true, iterationPathFinal);
+            var sprintIdMatch = Regex.Match(iterationPathFinal, @"\d+$");
+            if (!sprintIdMatch.Success) return (true, iterationPathFinal);
+
+            var milestoneConfig = targetField.Milestones;
+
+            var sprintId = int.Parse(sprintIdMatch.Value);
+
+            var milestone = milestoneConfig.Milestone.FirstOrDefault(m => sprintId < m.Threshold)?.Name ?? milestoneConfig.Default;
+            var iterationPathHierarchical = milestone + "/" + iterationPathFinal;
+            return (true, iterationPathHierarchical);
+        }
+
         }
 
 

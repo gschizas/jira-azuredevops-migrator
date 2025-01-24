@@ -34,6 +34,8 @@ namespace Migration.Common.Config
         [JsonProperty("pattern-to")]
         public string PatternTo { get; set; }
 
+        [JsonProperty("milestones")]
+        public Milestones Milestones { get; set; }
 
     }
 }
