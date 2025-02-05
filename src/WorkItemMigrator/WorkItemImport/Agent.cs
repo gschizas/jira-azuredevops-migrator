@@ -96,20 +96,6 @@ namespace WorkItemImport
                     _witClientUtils.CorrectComment(wi, _context.GetItem(rev.ParentOriginId), rev, _context.Journal.IsAttachmentMigrated);
                 }
 
-                if (wi.Fields.ContainsKey(WiFieldReference.AcceptanceCriteria) && !string.IsNullOrEmpty(wi.Fields[WiFieldReference.AcceptanceCriteria].ToString()))
-                {
-                    Logger.Log(LogLevel.Debug, $"Correcting acceptance criteria on separate revision on '{rev}'.");
-
-                    try
-                    {
-                        _witClientUtils.CorrectAcceptanceCriteria(wi, _context.GetItem(rev.ParentOriginId), rev, _context.Journal.IsAttachmentMigrated);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Log(ex, $"Failed to correct acceptance criteria for '{wi.Id}', rev '{rev}'.");
-                    }
-                }
-
                 _witClientUtils.SaveWorkItemAttachments(rev, wi, settings);
 
                 foreach (string attOriginId in rev.Attachments.Select(wiAtt => wiAtt.AttOriginId))
@@ -133,6 +119,24 @@ namespace WorkItemImport
                     catch (Exception ex)
                     {
                         Logger.Log(ex, $"Failed to correct description for '{wi.Id}', rev '{rev}'.");
+                    }
+
+                    if (wi.Fields.ContainsKey(WiFieldReference.AcceptanceCriteria) && !string.IsNullOrEmpty(wi.Fields[WiFieldReference.AcceptanceCriteria].ToString()))
+                    {
+                        Logger.Log(LogLevel.Debug, $"Correcting acceptance criteria on separate revision on '{rev}'.");
+
+                        try
+                        {
+                            _witClientUtils.CorrectAcceptanceCriteria(wi, _context.GetItem(rev.ParentOriginId), rev, _context.Journal.IsAttachmentMigrated);
+                        }
+                        catch (AttachmentNotFoundException)
+                        {
+                            throw;
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Log(ex, $"Failed to correct acceptance criteria for '{wi.Id}', rev '{rev}'.");
+                        }
                     }
 
                     // Correct other HTMl fields than description
@@ -662,6 +666,8 @@ namespace WorkItemImport
                 // If this revision already has any fields, defer the link import by 2 miliseconds. Otherwise the Work Items API will
                 // send the response: "VS402625: Dates must be increasing with each revision"
                 saveLinkTimestamp = saveLinkTimestamp.AddMilliseconds(2);
+                // This needs to be set so that ApplyFields gets a later date, later on in the revision import
+                wi.Fields[WiFieldReference.ChangedDate] = saveLinkTimestamp.AddMilliseconds(2);
             }
             
             for (int i = 0; i < rev.Links.Count; i++)
@@ -690,6 +696,8 @@ namespace WorkItemImport
                         // If this has multiple link updates, defer each ubsequent link import by 2 miliseconds.
                         // Otherwise the Work Items API will send the response: "VS402625: Dates must be increasing with each revision"
                         saveLinkTimestamp = saveLinkTimestamp.AddMilliseconds(2);
+                        // This needs to be set so that ApplyFields gets a later date, later on in the revision import
+                        wi.Fields[WiFieldReference.ChangedDate] = saveLinkTimestamp.AddMilliseconds(2);
                     }
 
                     if (link.Change == ReferenceChangeType.Added && !_witClientUtils.AddAndSaveLink(link, wi, settings, rev.Author, saveLinkTimestamp))
