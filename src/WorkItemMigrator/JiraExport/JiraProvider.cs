@@ -223,6 +223,7 @@ namespace JiraExport
             var index = 0;
 
             Logger.Log(LogLevel.Debug, "Enumerate remote issues");
+            var startTime = DateTime.Now;
 
             do
             {
@@ -263,7 +264,11 @@ namespace JiraExport
                             continue;
                         }
 
-                        Logger.Log(LogLevel.Info, $"Processing {index + 1}/{totalItems} - '{issueKey}'.");
+                        var percentageDone = (index + 1) / (double)totalItems;
+                        var elapsedTime = DateTime.Now - startTime;
+                        var estimatedEndTime = startTime.AddMilliseconds(elapsedTime.TotalMilliseconds / percentageDone);
+
+                        Logger.Log(LogLevel.Info, $"Processing {index + 1}/{totalItems} - '{issueKey} // {percentageDone:P} done, ETA: {estimatedEndTime}'.");
                         var issue = ProcessItem(issueKey, skipList);
 
                         if (issue == null)
