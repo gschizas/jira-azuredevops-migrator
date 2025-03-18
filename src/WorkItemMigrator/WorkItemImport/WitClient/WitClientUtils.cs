@@ -1169,7 +1169,7 @@ namespace WorkItemImport
                         a => a.Rel == AttachedFile &&
                         a.Url != null &&
                         a.Attributes[Comment].ToString().Split(
-                            new string[] { ", original ID: " }, StringSplitOptions.None)[1] == att.AttOriginId
+                            new[] { ", original ID: " }, StringSplitOptions.None)[1] == att.AttOriginId
                     );
                 }
                 catch (Exception ex)
