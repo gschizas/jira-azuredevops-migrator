@@ -377,6 +377,17 @@ namespace JiraExport
 
         }
 
+        public async Task<JiraAttachment> DownloadAttachment(int attachmentId)
+        {
+            var att = new JiraAttachment { Id = attachmentId.ToString() };
+            var jiraAtt = await DownloadAttachmentAsync(att);
+            if (jiraAtt == null || string.IsNullOrWhiteSpace(jiraAtt.LocalPath))
+            {
+                return null;
+            }
+            return jiraAtt;
+        }
+
         public async Task<List<RevisionAction<JiraAttachment>>> DownloadAttachments(JiraRevision rev)
         {
             var attChanges = rev.AttachmentActions;

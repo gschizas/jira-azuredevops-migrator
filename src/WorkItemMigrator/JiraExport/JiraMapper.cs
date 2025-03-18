@@ -7,7 +7,9 @@ using Migration.WIContract;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Migration.Jira-Export.Tests")]
 
@@ -70,8 +72,8 @@ namespace JiraExport
 
             foreach (var revision in revisions)
             {
-                foreach (var field in revision.Fields.Where(f => 
-                             f.ReferenceName == WiFieldReference.Description || 
+                foreach (var field in revision.Fields.Where(f =>
+                             f.ReferenceName == WiFieldReference.Description ||
                              f.ReferenceName == WiFieldReference.History ||
                              f.ReferenceName == WiFieldReference.ReproSteps))
                 {
@@ -91,6 +93,8 @@ namespace JiraExport
                         .SelectMany(r => r.Attachments)
                         .Select(a => a.FileName)
                         .ToHashSet();
+
+                    ReplaceInlineImages(inlineImages, revision, field, previousAttachments, nextAttachments);
                 }
 
                 if (revision.Fields.Any() || revision.Attachments.Any() || revision.Links.Any() || revision.DevelopmentLink != null)
@@ -104,15 +108,104 @@ namespace JiraExport
             foreach (var revision in nonEmptyRevisions)
             {
                 revision.Index = revisionIndex++;
-                if (revision.Time <= oldTime) 
+                if (revision.Time <= oldTime)
                     revision.Time += TimeSpan.FromMilliseconds(50);
                 oldTime = revision.Time;
             }
 
             return nonEmptyRevisions;
+
+            void ReplaceInlineImages(HtmlNodeCollection inlineImages, WiRevision revision, WiField field,
+                HashSet<string> previousAttachments, HashSet<string> nextAttachments)
+            {
+                foreach (var inlineImage in inlineImages)
+                {
+                    var imageSourceAttribute = inlineImage.GetAttributeValue("src", string.Empty);
+                    var imageUri = new Uri(imageSourceAttribute);
+                    if (imageUri.Host == "orphanattachment.internal")
+                    {
+                        Logger.Log(LogLevel.Warning, $"Inline image '{imageUri.LocalPath}' in revision {revision.Index} is an orphan attachment.");
+                        var attachmentId = (from att in _config.OrphanAttachments where "/" + att.Filename == imageUri.AbsolutePath select att.AttachmentId).FirstOrDefault();
+                        if (attachmentId != 0)
+                        {
+                            var attachmentUrl = DownloadSingleAttachment(attachmentId.ToString(), imageUri.AbsolutePath[1..], revision);
+                            field.Value = (field.Value as string)?.Replace(imageSourceAttribute, attachmentUrl);
+                        }
+                        else
+                        {
+                            var message = $"Orphan attachment '{imageUri.LocalPath}' in revision {revision.ParentOriginId}.{revision.Index} is not found in the configuration.";
+                            Logger.Log(LogLevel.Error, message);
+                            // throw new Exception(message);
+                        }
+                        continue;
+                    }
+                    var imageLocalPath = imageUri.LocalPath;
+                    var imageFilename = Path.GetFileName(imageLocalPath);
+                    var imageFolderName = Path.GetFileName(Path.GetDirectoryName(imageLocalPath));
+                    var imageFilenameAlternate = Regex.Replace(imageFilename, "^" + Regex.Escape(imageFolderName ?? string.Empty) + "_", "");
+
+                    // Skip if the image is already an attachment
+                    if (previousAttachments.Contains(imageFilename) || previousAttachments.Contains(imageFilenameAlternate)) continue;
+
+                    // Collapse next revisions if the image is an attachment
+                    if (nextAttachments.Contains(imageFilename) || nextAttachments.Contains(imageFilenameAlternate))
+                    {
+                        // Move the attachment to the current revision
+                        var attachmentToMove = revisions
+                            .Where(r => r.Index > revision.Index)
+                            .SelectMany(r => r.Attachments)
+                            .FirstOrDefault(a => a.FileName == imageFilename || a.FileName == imageFilenameAlternate);
+
+                        if (attachmentToMove == null) continue;
+
+                        revision.Attachments.Add(attachmentToMove);
+                        revision.AttachmentReferences = true;
+                        revisions
+                            .Where(r => r.Index > revision.Index)
+                            .ToList()
+                            .ForEach(r => r.Attachments.Remove(attachmentToMove));
+                    }
+                    else
+                    {
+                        DownloadSingleAttachment(imageFolderName, imageFilename, revision);
+                    }
+                }
+            }
+            string DownloadSingleAttachment(string imageFolderName, string imageFilename, WiRevision revision)
+            {
+                // Download the image manually and add it as an attachment (on this revision)
+                int jiraAttachmentId;
+                try
+                {
+                    jiraAttachmentId = int.Parse(imageFolderName);
+                }
+                catch (FormatException)
+                {
+                    Logger.Log(LogLevel.Error, $"Inline image '{imageFilename}' in revision {revision.ParentOriginId}.{revision.Index} is not an attachment.");
+                    return null;
+                }
+
+                var jiraAttachment = _jiraProvider.DownloadAttachment(jiraAttachmentId).Result;
+
+                if (jiraAttachment != null)
+                {
+                    var attachment = new WiAttachment()
+                    {
+                        Change = ReferenceChangeType.Added,
+                        AttOriginId = imageFilename,
+                        FilePath = jiraAttachment.LocalPath,
+                        Comment = "Imported from Jira"
+                    };
+                    revision.Attachments.Add(attachment);
+                    return jiraAttachment.Url;
+                }
+                else
+                {
+                    Logger.Log(LogLevel.Error, $"Inline image '{imageFilename}' in revision {revision.Index} is not an attachment.");
+                    return null;
+                }
+            }
         }
-
-
 
         internal Dictionary<string, FieldMapping<JiraRevision>> InitializeFieldMappings(ExportIssuesSummary exportIssuesSummary)
         {
@@ -383,7 +476,7 @@ namespace JiraExport
                             if (include)
                             {
                                 value = TruncateField(value, fieldreference);
-                                if(value == null)
+                                if (value == null)
                                 {
                                     value = "";
                                 }

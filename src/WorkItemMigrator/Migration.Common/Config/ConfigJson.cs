@@ -1,4 +1,5 @@
-﻿using Migration.Common.Config;
+﻿using System.Collections.Generic;
+using Migration.Common.Config;
 
 using Newtonsoft.Json;
 
@@ -86,6 +87,10 @@ namespace Common.Config
 
         [JsonProperty(PropertyName = "suppress-notifications")]
         public bool SuppressNotifications { get; set; } = false;
-        
+
+        [JsonProperty(PropertyName = "orphan-attachments")]
+        public List<OrphanAttachment> OrphanAttachments { get; set; }
+
+
     }
 }
