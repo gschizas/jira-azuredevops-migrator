@@ -609,7 +609,7 @@ namespace WorkItemImport
                     }
                     catch (AggregateException e)
                     {
-                        if (e.InnerException.Message.Contains("TF237082"))
+                        if (e.InnerException!.Message.Contains("TF237082"))
                         {
                             Logger.Log(LogLevel.Warning, $"'{rev}' - tried to add an attachment, But the attachment exceeds " +
                                 $"the supported file upload size. Skipping attachment: {attachment.FileName}. See full error " +
@@ -619,6 +619,12 @@ namespace WorkItemImport
                         {
                             Logger.Log(LogLevel.Warning, $"'{rev}' - tried to add an attachment, but hit the workitem attachment " +
                                 $"limit (cannot add more than 100 attachments. Skipping attachment: {attachment.FileName}");
+                        }
+                        else if (e.InnerException.Message.StartsWith("VS402625:"))
+                        {
+                            Logger.Log(LogLevel.Warning, $"'{rev}' - tried to add an attachment, the date was not increased. Retrying");
+                            attachmentUpdatedDate = attachmentUpdatedDate.AddSeconds(1);
+                            AddSingleAttachmentToWorkItemAndSave(attachment, wi, settings, attachmentUpdatedDate, rev.Author);
                         }
                         else
                         {
