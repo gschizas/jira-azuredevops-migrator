@@ -233,6 +233,7 @@ namespace JiraExport
             if (iterationPathTemporary == null)
                 return (false, null);
 
+            if (!Regex.Match((string)iterationPathTemporary, targetField.PatternFrom).Success) return (true, iterationPathTemporary);
             var iterationPathFinal = Regex.Replace((string)iterationPathTemporary, targetField.PatternFrom, targetField.PatternTo);
             var sprintIdMatch = Regex.Match(iterationPathFinal, @"\d+$");
             if (!sprintIdMatch.Success) return (true, iterationPathFinal);
