@@ -99,6 +99,8 @@ namespace WorkItemImport
             sw.Start();
             bool succeeded = true;
 
+            var startTime = DateTime.Now;
+
             try
             {
                 string configFileName = configFile.Value();
@@ -180,7 +182,16 @@ namespace WorkItemImport
                             wi = agent.CreateWorkItem(executionItem.WiType, settings.SuppressNotifications, executionItem.Revision.Time, executionItem.Revision.Author);
                         }
 
-                        Logger.Log(LogLevel.Info, $"Processing {importedItems + 1}/{revisionCount} - wi '{(wi.Id > 0 ? wi.Id.ToString() : "Initial revision")}', jira '{executionItem.OriginId}, rev {executionItem.Revision.Index}'.");
+
+                        var percentageDone = (importedItems + 1) / (double)revisionCount;
+                        var elapsedTime = DateTime.Now - startTime;
+                        var totalTime = elapsedTime.TotalMilliseconds / percentageDone;
+                        var estimatedEndTime = startTime.AddMilliseconds(totalTime);
+
+                        var message = $"Processing {importedItems + 1}/{revisionCount} - wi '{(wi.Id > 0 ? wi.Id.ToString() : "Initial revision")}', " +
+                                      $"jira '{executionItem.OriginId}, rev {executionItem.Revision.Index}'." + 
+                                      $" // {percentageDone:P} done, ETA: {estimatedEndTime:g} (Total: {TimeSpan.FromMilliseconds(totalTime):g})";
+                        Logger.Log(LogLevel.Info, message);
 
                         importedItems++;
 

@@ -272,9 +272,12 @@ namespace JiraExport
 
                         var percentageDone = (index + 1) / (double)totalItems;
                         var elapsedTime = DateTime.Now - startTime;
-                        var estimatedEndTime = startTime.AddMilliseconds(elapsedTime.TotalMilliseconds / percentageDone);
+                        var totalTime = elapsedTime.TotalMilliseconds / percentageDone;
+                        var estimatedEndTime = startTime.AddMilliseconds(totalTime);
 
-                        Logger.Log(LogLevel.Info, $"Processing {index + 1}/{totalItems} - '{issueKey} // {percentageDone:P} done, ETA: {estimatedEndTime}'.");
+                        var message = $"Processing {index + 1}/{totalItems} - '{issueKey}" +
+                                      $" // {percentageDone:P} done, ETA: {estimatedEndTime:g} (Total: {TimeSpan.FromMilliseconds(totalTime):g})";
+                        Logger.Log(LogLevel.Info, message);
                         var issue = ProcessItem(issueKey, skipList);
 
                         if (issue == null)
