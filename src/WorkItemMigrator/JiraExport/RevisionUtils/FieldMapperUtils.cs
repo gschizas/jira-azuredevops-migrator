@@ -231,7 +231,7 @@ namespace JiraExport
 
             var iterationPathTemporary = MapSprint(iterationPathInitial);
             if (iterationPathTemporary == null)
-                return (false, null);
+                return (true, null);
 
             if (!Regex.Match((string)iterationPathTemporary, targetField.PatternFrom).Success) return (true, iterationPathTemporary);
             var iterationPathFinal = Regex.Replace((string)iterationPathTemporary, targetField.PatternFrom, targetField.PatternTo);
