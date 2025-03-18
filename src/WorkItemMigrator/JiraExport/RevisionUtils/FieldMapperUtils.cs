@@ -318,6 +318,7 @@ namespace JiraExport
             htmlDoc.LoadHtml(htmlValue);
             ReplaceEmoticonImages(htmlDoc);
             ReplaceRenderedIcons(htmlDoc);
+            ReplaceOtherImages(htmlDoc);
             ReplaceFontTagsWithSpan(htmlDoc);
             htmlValue = htmlDoc.DocumentNode.OuterHtml;
 
@@ -408,6 +409,38 @@ namespace JiraExport
                     "link_attachment_7" => "↘️",
                     _ => "❓"
                 };
+            }
+        }
+
+        private static void ReplaceOtherImages(HtmlDocument htmlDoc)
+        {
+            var otherImages = htmlDoc.DocumentNode.SelectNodes("//img[@imagetext]");
+            if (otherImages == null) return;
+
+            foreach (var image in otherImages)
+            {
+                var imageReplacement = GetOtherImage(image.Attributes["src"]?.Value, image.Attributes["imagetext"]?.Value);
+                if (imageReplacement != null)
+                {
+                    image.Attributes["src"].Value = imageReplacement;
+                }
+            }
+
+            return;
+
+            static string GetOtherImage(string imageSource, string imageText)
+            {
+                if (imageSource == null)
+                    return null;
+
+                var imagePath = new Uri(imageSource).LocalPath;
+                var imageName = Path.GetFileNameWithoutExtension(imagePath);
+                var imageFolder = Path.GetFileName(Path.GetDirectoryName(imagePath));
+                if (imageFolder != "attach" || imageName != "noimage") return null;
+
+                var rawImageName = imageText.Split("|")[0];
+                var fullImageName = "http://orphanattachment.internal/" + rawImageName;
+                return fullImageName;
             }
         }
 
