@@ -34,6 +34,8 @@ namespace JiraExport
 
         private readonly IJiraServiceWrapper _jiraServiceWrapper;
 
+        private ILookup<string, int> JiraFieldOverrides = null;
+
         public JiraSettings Settings { get; private set; }
 
         public ExportIssuesSummary exportIssuesSummary { get; private set; }
@@ -45,7 +47,7 @@ namespace JiraExport
             _jiraServiceWrapper = jiraServiceWrapper;
         }
 
-        public void Initialize(JiraSettings settings, ExportIssuesSummary exportIssuesSummary)
+        public void Initialize(JiraSettings settings, ExportIssuesSummary exportIssuesSummary, Dictionary<string, int> overrides)
         {
             Settings = settings;
 
@@ -73,6 +75,10 @@ namespace JiraExport
             {
                 Logger.Log(e, "Failed to retrieve linktypes from Jira");
             }
+
+            JiraFieldOverrides = (overrides ?? new Dictionary<string, int>())
+                .Select(pair => new { Key = pair.Key.ToLower(), Value = pair.Value })
+                .ToLookup(x => x.Key, x => x.Value);
         }
 
         public JiraSettings GetSettings()
@@ -446,6 +452,26 @@ namespace JiraExport
             if (JiraNameFieldCache == null)
             {
                 response = (JArray)_jiraServiceWrapper.RestClient.ExecuteRequestAsync(Method.GET, $"{JiraApiV2}/field").Result;
+
+                if (JiraFieldOverrides.Any())
+                {
+                    foreach (var field in response)
+                    {
+                        var originalName = field.Value<string>("name");
+                        var fieldName = originalName.ToLower();
+                        var fieldId = field.Value<string>("id");
+
+                        if (!JiraFieldOverrides.Contains(fieldName))
+                            continue;
+
+                        var overriddenFieldId = JiraFieldOverrides[fieldName].First();
+
+                        if ($"customfield_{overriddenFieldId}" == fieldId) continue;
+
+                        field["name"] = originalName + "." + fieldId.Replace("customfield_", "");
+                    }
+                }
+
                 JiraNameFieldCache = CreateFieldCacheLookup(response, "name", "id");
             }
 

@@ -124,7 +124,7 @@ namespace JiraExport
 
                 var jiraServiceWrapper = new JiraServiceWrapper(jiraSettings);
                 JiraProvider jiraProvider = new JiraProvider(jiraServiceWrapper);
-                jiraProvider.Initialize(jiraSettings, exportIssuesSummary);
+                jiraProvider.Initialize(jiraSettings, exportIssuesSummary, config.FieldMap.Overrides);
 
                 itemsCount = jiraProvider.GetItemCount(jiraSettings.JQL);
 
