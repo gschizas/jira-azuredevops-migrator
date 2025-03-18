@@ -663,6 +663,13 @@ namespace WorkItemImport
                 foreach (Exception ex2 in ex.InnerExceptions)
                 {
                     Logger.Log(LogLevel.Error, ex2.Message);
+                    var ex3 = (ex2 as Microsoft.VisualStudio.Services.Common.VssServiceException);
+                    if (ex3!.Message.StartsWith("VS402625"))
+                    {
+                        wi.Fields["System.ChangedDate"] = ((DateTime)wi.Fields["System.ChangedDate"]).AddMilliseconds(5);
+                        var patchDocument2 = PatchDocumentFromWorkItem(wi);
+                        _witClientWrapper.UpdateWorkItem(patchDocument2, wi.Id!.Value, settings.SuppressNotifications);
+                    }
                 }
                 Logger.Log(LogLevel.Error, "Work Item " + wi.Id + " failed to save.");
             }
@@ -1156,7 +1163,7 @@ namespace WorkItemImport
         {
             if (isAttachmentMigratedDelegate(att.AttOriginId, out string attWiId))
             {
-                return wi.Relations.SingleOrDefault(
+                return wi.Relations.FirstOrDefault(
                     a => a.Rel == AttachedFile &&
                     a.Url != null &&
                     a.Attributes[Comment].ToString().Split(
