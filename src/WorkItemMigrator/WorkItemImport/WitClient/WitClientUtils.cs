@@ -1163,12 +1163,20 @@ namespace WorkItemImport
         {
             if (isAttachmentMigratedDelegate(att.AttOriginId, out string attWiId))
             {
-                return wi.Relations.FirstOrDefault(
-                    a => a.Rel == AttachedFile &&
-                    a.Url != null &&
-                    a.Attributes[Comment].ToString().Split(
-                        new string[] { ", original ID: " }, StringSplitOptions.None)[1] == att.AttOriginId
-                );
+                try
+                {
+                    return wi.Relations.FirstOrDefault(
+                        a => a.Rel == AttachedFile &&
+                        a.Url != null &&
+                        a.Attributes[Comment].ToString().Split(
+                            new string[] { ", original ID: " }, StringSplitOptions.None)[1] == att.AttOriginId
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(LogLevel.Error, $"Error identifying attachment: {ex.Message}");
+                    throw;
+                }
             }
             return null;
         }
