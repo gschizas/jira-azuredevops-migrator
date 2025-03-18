@@ -238,10 +238,10 @@ namespace JiraExport
             if (!sprintIdMatch.Success) return (true, iterationPathFinal);
 
             var milestoneConfig = targetField.Milestones;
+            milestoneConfig.Milestone.Sort((a, b) => -a.Threshold.CompareTo(b.Threshold));
 
             var sprintId = int.Parse(sprintIdMatch.Value);
-
-            var milestone = milestoneConfig.Milestone.FirstOrDefault(m => sprintId < m.Threshold)?.Name ?? milestoneConfig.Default;
+            var milestone = milestoneConfig.Milestone.FirstOrDefault(m => sprintId >= m.Threshold)?.Name ?? milestoneConfig.Default;
             var iterationPathHierarchical = milestone + "/" + iterationPathFinal;
             return (true, iterationPathHierarchical);
         }
