@@ -1,4 +1,5 @@
 ﻿using Common.Config;
+using HtmlAgilityPack;
 using Migration.Common;
 using Migration.Common.Config;
 using Migration.Common.Log;
@@ -46,6 +47,8 @@ namespace JiraExport
                 if (type != null)
                 {
                     var revisions = issue.Revisions.Select(r => MapRevision(r)).ToList();
+                    revisions = CollapseRevisions(revisions);
+
                     wiItem.OriginId = issue.Key;
                     wiItem.Type = type;
                     wiItem.Revisions = revisions;
@@ -60,6 +63,56 @@ namespace JiraExport
 
             return wiItem;
         }
+
+        private List<WiRevision> CollapseRevisions(List<WiRevision> revisions)
+        {
+            var nonEmptyRevisions = new List<WiRevision>();
+
+            foreach (var revision in revisions)
+            {
+                foreach (var field in revision.Fields.Where(f => 
+                             f.ReferenceName == WiFieldReference.Description || 
+                             f.ReferenceName == WiFieldReference.History ||
+                             f.ReferenceName == WiFieldReference.ReproSteps))
+                {
+                    var htmlDoc = new HtmlDocument();
+                    htmlDoc.LoadHtml(field.Value as string);
+                    var inlineImages = htmlDoc.DocumentNode.SelectNodes("//img");
+                    if (inlineImages == null) continue;
+
+                    var previousAttachments = revisions
+                        .Where(r => r.Index < revision.Index)
+                        .SelectMany(r => r.Attachments)
+                        .Select(a => a.FileName)
+                        .ToHashSet();
+
+                    var nextAttachments = revisions
+                        .Where(r => r.Index > revision.Index)
+                        .SelectMany(r => r.Attachments)
+                        .Select(a => a.FileName)
+                        .ToHashSet();
+                }
+
+                if (revision.Fields.Any() || revision.Attachments.Any() || revision.Links.Any() || revision.DevelopmentLink != null)
+                {
+                    nonEmptyRevisions.Add(revision);
+                }
+            }
+
+            var revisionIndex = 0;
+            var oldTime = DateTime.MinValue;
+            foreach (var revision in nonEmptyRevisions)
+            {
+                revision.Index = revisionIndex++;
+                if (revision.Time <= oldTime) 
+                    revision.Time += TimeSpan.FromMilliseconds(50);
+                oldTime = revision.Time;
+            }
+
+            return nonEmptyRevisions;
+        }
+
+
 
         internal Dictionary<string, FieldMapping<JiraRevision>> InitializeFieldMappings(ExportIssuesSummary exportIssuesSummary)
         {
