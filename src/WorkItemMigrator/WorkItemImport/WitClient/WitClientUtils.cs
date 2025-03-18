@@ -649,31 +649,7 @@ namespace WorkItemImport
             }
 
             // Build json patch document from fields
-            JsonPatchDocument patchDocument = new JsonPatchDocument();
-            foreach (string key in wi.Fields.Keys)
-            {
-                if (new string[] {
-                    WiFieldReference.BoardColumn,
-                    WiFieldReference.BoardColumnDone,
-                    WiFieldReference.BoardLane,
-                }.Contains(key))
-                    continue;
-
-                object val = wi.Fields[key];
-
-                if (val == null || val.ToString() == "")
-                {
-                    patchDocument.Add(
-                        JsonPatchDocUtils.CreateJsonFieldPatchOp(Operation.Remove, key, null)
-                    );
-                }
-                else
-                {
-                    patchDocument.Add(
-                        JsonPatchDocUtils.CreateJsonFieldPatchOp(Operation.Replace, key, val)
-                    );
-                }
-            }
+            var patchDocument = PatchDocumentFromWorkItem(wi);
 
             try
             {
@@ -689,6 +665,37 @@ namespace WorkItemImport
                     Logger.Log(LogLevel.Error, ex2.Message);
                 }
                 Logger.Log(LogLevel.Error, "Work Item " + wi.Id + " failed to save.");
+            }
+
+            JsonPatchDocument PatchDocumentFromWorkItem(WorkItem workItem)
+            {
+                JsonPatchDocument jsonPatchDocument = new JsonPatchDocument();
+                foreach (string key in workItem.Fields.Keys)
+                {
+                    if (new string[] {
+                            WiFieldReference.BoardColumn,
+                            WiFieldReference.BoardColumnDone,
+                            WiFieldReference.BoardLane,
+                        }.Contains(key))
+                        continue;
+
+                    object val = workItem.Fields[key];
+
+                    if (val == null || val.ToString() == "")
+                    {
+                        jsonPatchDocument.Add(
+                            JsonPatchDocUtils.CreateJsonFieldPatchOp(Operation.Remove, key, null)
+                        );
+                    }
+                    else
+                    {
+                        jsonPatchDocument.Add(
+                            JsonPatchDocUtils.CreateJsonFieldPatchOp(Operation.Replace, key, val)
+                        );
+                    }
+                }
+
+                return jsonPatchDocument;
             }
         }
 
