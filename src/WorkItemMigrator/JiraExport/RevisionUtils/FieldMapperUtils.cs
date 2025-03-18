@@ -93,7 +93,7 @@ namespace JiraExport
                     if (string.IsNullOrEmpty(mappedValue))
                     {
                         Logger.Log(LogLevel.Warning, $"Missing mapping value '{value}' for field '{itemSource}' for item type '{targetWit}'.");
-                        if(itemSource == "status")
+                        if (itemSource == "status")
                         {
                             exportIssuesSummary.AddUnmappedIssueState(targetWit, value.ToString());
                         }
