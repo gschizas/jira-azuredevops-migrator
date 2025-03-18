@@ -100,7 +100,7 @@ namespace Migration.Jira_Export.Tests
             var exportIssuesSummary = new ExportIssuesSummary();
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => FieldMapperUtils.MapValue(revision, itemSource, itemTarget, _config, exportIssuesSummary));
+            Assert.Throws<ArgumentNullException>(() => FieldMapperUtils.MapValue(revision, itemSource, itemTarget, _config, null, exportIssuesSummary));
         }
 
         [Test]
@@ -122,7 +122,7 @@ namespace Migration.Jira_Export.Tests
             var exportIssuesSummary = new ExportIssuesSummary();
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => FieldMapperUtils.MapValue(revision, itemSource, itemTarget, config, exportIssuesSummary));
+            Assert.Throws<ArgumentNullException>(() => FieldMapperUtils.MapValue(revision, itemSource, itemTarget, config, null, exportIssuesSummary));
         }
 
         [Test]
@@ -143,7 +143,7 @@ namespace Migration.Jira_Export.Tests
             var exportIssuesSummary = new ExportIssuesSummary();
 
             // Act
-            var result = FieldMapperUtils.MapValue(revision, itemSource, itemTarget, _config, exportIssuesSummary);
+            var result = FieldMapperUtils.MapValue(revision, itemSource, itemTarget, _config, null, exportIssuesSummary);
 
             // Assert
             Assert.IsFalse(result.Item1);
@@ -168,7 +168,7 @@ namespace Migration.Jira_Export.Tests
             var exportIssuesSummary = new ExportIssuesSummary();
 
             // Act
-            var result = FieldMapperUtils.MapValue(revision, itemSource, itemTarget, _config, exportIssuesSummary);
+            var result = FieldMapperUtils.MapValue(revision, itemSource, itemTarget, _config, null, exportIssuesSummary);
 
             // Assert
             Assert.IsTrue(result.Item1);
@@ -226,7 +226,7 @@ namespace Migration.Jira_Export.Tests
             var exportIssuesSummary = new ExportIssuesSummary();
 
             // Act
-            var result = FieldMapperUtils.MapValue(revision, itemSource, itemTarget, config, exportIssuesSummary);
+            var result = FieldMapperUtils.MapValue(revision, itemSource, itemTarget, config, null, exportIssuesSummary);
 
             // Assert
             Assert.IsTrue(result.Item1);
@@ -254,7 +254,7 @@ namespace Migration.Jira_Export.Tests
             var exportIssuesSummary = new ExportIssuesSummary();
 
             // Act
-            var result = FieldMapperUtils.MapValue(revision, itemSource, itemTarget, _config, exportIssuesSummary);
+            var result = FieldMapperUtils.MapValue(revision, itemSource, itemTarget, _config, null, exportIssuesSummary);
 
             // Assert
             Assert.IsTrue(result.Item1);

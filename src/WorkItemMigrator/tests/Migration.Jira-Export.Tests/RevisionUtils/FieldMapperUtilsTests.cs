@@ -256,7 +256,7 @@ namespace Migration.Jira_Export.Tests.RevisionUtils
 
             var exportIssuesSummary = new ExportIssuesSummary();
 
-            var actualOutput = FieldMapperUtils.MapValue(jiraRevision, "priority", "priority", configJson, exportIssuesSummary);
+            var actualOutput = FieldMapperUtils.MapValue(jiraRevision, "priority", "priority", configJson, null, exportIssuesSummary);
 
             Assert.Multiple(() =>
             {
@@ -296,7 +296,7 @@ namespace Migration.Jira_Export.Tests.RevisionUtils
 
             var exportIssuesSummary = new ExportIssuesSummary();
 
-            var actualOutput = FieldMapperUtils.MapValue(jiraRevision, "resolution", "System.Reason", configJson, exportIssuesSummary);
+            var actualOutput = FieldMapperUtils.MapValue(jiraRevision, "resolution", "System.Reason", configJson, null, exportIssuesSummary);
 
             Assert.Multiple(() =>
             {
@@ -334,7 +334,7 @@ namespace Migration.Jira_Export.Tests.RevisionUtils
 
             var exportIssuesSummary = new ExportIssuesSummary();
 
-            var actualOutput = FieldMapperUtils.MapValue(jiraRevision, "emtpy", "empty", configJson, exportIssuesSummary);
+            var actualOutput = FieldMapperUtils.MapValue(jiraRevision, "emtpy", "empty", configJson, null, exportIssuesSummary);
 
             Assert.Multiple(() =>
             {
@@ -346,7 +346,7 @@ namespace Migration.Jira_Export.Tests.RevisionUtils
         [Test]
         public void When_calling_map_value_with_null_arguments_Then_and_exception_is_thrown()
         {
-            Assert.Throws<ArgumentNullException>(() => { FieldMapperUtils.MapValue(null, null, null, null, null); });
+            Assert.Throws<ArgumentNullException>(() => { FieldMapperUtils.MapValue(null, null, null, null, null, null); });
         }
 
         [Test]
