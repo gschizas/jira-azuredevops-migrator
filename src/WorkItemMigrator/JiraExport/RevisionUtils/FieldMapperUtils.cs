@@ -247,6 +247,33 @@ namespace JiraExport
             return (true, iterationPathHierarchical);
         }
 
+        public static (bool, object) MapArea(JiraRevision r, string sourceField, bool isCustomField, string customFieldName, ConfigJson config)
+        {
+            if (r == null)
+                throw new ArgumentNullException(nameof(r));
+
+            if (config == null)
+                throw new ArgumentNullException(nameof(config));
+
+            var targetField = (from f in config.FieldMap.Fields where f.Source == sourceField select f).FirstOrDefault();
+            if (targetField == null)
+                return (false, null);
+
+            // sourceField = SetCustomFieldName(sourceField, isCustomField, customFieldName);
+
+            var hasFieldValue = r.Fields.TryGetValue(customFieldName, out object value);
+            if (!hasFieldValue)
+                return (false, null);
+
+            var areaPathInitial = (string)value;
+
+            if (areaPathInitial.Contains(';'))
+            {
+                areaPathInitial = areaPathInitial.Split(';').Last();
+                Logger.Log(LogLevel.Warning, "Area path contains multiple values. Using the last value: " + areaPathInitial);
+            }
+
+            return (true, areaPathInitial);
         }
 
 
