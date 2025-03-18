@@ -120,7 +120,8 @@ namespace WorkItemImport
                     IncludeLinkComments = config.IncludeLinkComments,
                     IncludeDevelopmentLinks = config.IncludeDevelopmentLinks,
                     FieldMap = config.FieldMap,
-                    SuppressNotifications = config.SuppressNotifications
+                    SuppressNotifications = config.SuppressNotifications,
+                    ChangedDateBumpMS = config.ChangedDateBumpMS
                 };
 
                 // initialize Azure DevOps/TFS connection. Creates/fetches project, fills area and iteration caches.
