@@ -1168,7 +1168,7 @@ namespace WorkItemImport
                     return wi.Relations.FirstOrDefault(
                         a => a.Rel == AttachedFile &&
                         a.Url != null &&
-                        a.Attributes[Comment].ToString().Split(
+                        a.Attributes[Comment].ToString()?.Split(
                             new[] { ", original ID: " }, StringSplitOptions.None)[1] == att.AttOriginId
                     );
                 }
