@@ -418,36 +418,50 @@ namespace JiraExport
             return _jiraServiceWrapper.Issues.GetCommentsAsync(key).Result.Count();
         }
 
+        private async Task<JiraUser> GetUserByName(string usernameOrAccountId)
+        {
+            usernameOrAccountId = Uri.EscapeDataString(usernameOrAccountId);
+            var userByNameRaw = await _jiraServiceWrapper.RestClient.ExecuteRequestAsync<JiraUser>(Method.GET, $"{JiraApiV2}/user?username={usernameOrAccountId}");
+            return userByNameRaw;
+        }
+
+        private async Task<JiraUser> GetUserByKey(string userKey)
+        {
+            userKey = Uri.EscapeDataString(userKey);
+            var userByKeyRaw = await _jiraServiceWrapper.RestClient.ExecuteRequestAsync<JiraUser>(Method.GET, $"{JiraApiV2}/user?key={userKey}");
+            return userByKeyRaw;
+        }
+
+        private async Task<JiraUser> GetUserByNameOrKey(string usernameOrAccountId)
+        {
+            try
+            {
+                return await GetUserByName(usernameOrAccountId);
+            }
+            catch (ResourceNotFoundException ex)
+            {
+                try
+                {
+                    return await GetUserByKey(usernameOrAccountId);
+                }
+                catch (ResourceNotFoundException ex2)
+                {
+                    return null;
+                }
+            }
+        }
+
+
         public string GetUserEmail(string usernameOrAccountId)
         {
             if (_userEmailCache.TryGetValue(usernameOrAccountId, out string email))
             {
                 return email;
             }
-            try
-            {
-                var user = _jiraServiceWrapper.Users.GetUserAsync(usernameOrAccountId).Result;
-                var isUserEmailMissing = string.IsNullOrEmpty(user.Email);
-                if (isUserEmailMissing)
-                {
-                    Logger.Log(LogLevel.Info,
-                        Settings.UsingJiraCloud
-                            ? $"Email is not public for user '{usernameOrAccountId}' in Jira," +
-                            $" using usernameOrAccountId '{usernameOrAccountId}' for mapping." +
-                            $" You may safely ignore this warning, unless there is a subsequent warning about" +
-                            $" the username/accountId being missing in the usermapping file."
-                            : $"Email for user '{usernameOrAccountId}' not found in Jira," +
-                            $" using username '{usernameOrAccountId}' for mapping." +
-                            $" You may safely ignore this warning, unless there is a subsequent warning about" +
-                            $" the username/accountId being missing in the usermapping file."
-                    );
-                    exportIssuesSummary.AddUnmappedUser(usernameOrAccountId);
-                }
-                email = isUserEmailMissing ? usernameOrAccountId : user.Email;
-                _userEmailCache.Add(usernameOrAccountId, email);
-                return email;
-            }
-            catch (Exception)
+
+            var user = GetUserByNameOrKey(usernameOrAccountId).Result;
+
+            if (user == null)
             {
                 Logger.Log(LogLevel.Info,
                     Settings.UsingJiraCloud
@@ -456,6 +470,27 @@ namespace JiraExport
                 _userEmailCache.Add(usernameOrAccountId, usernameOrAccountId);
                 return usernameOrAccountId;
             }
+
+            var isUserEmailMissing = string.IsNullOrEmpty(user.Email);
+            if (isUserEmailMissing)
+            {
+                Logger.Log(LogLevel.Info,
+                    Settings.UsingJiraCloud
+                        ? $"Email is not public for user '{usernameOrAccountId}' in Jira," +
+                            $" using usernameOrAccountId '{usernameOrAccountId}' for mapping." +
+                            $" You may safely ignore this warning, unless there is a subsequent warning about" +
+                            $" the username/accountId being missing in the usermapping file."
+                        : $"Email for user '{usernameOrAccountId}' not found in Jira," +
+                            $" using username '{usernameOrAccountId}' for mapping." +
+                            $" You may safely ignore this warning, unless there is a subsequent warning about" +
+                            $" the username/accountId being missing in the usermapping file."
+                );
+                exportIssuesSummary.AddUnmappedUser(usernameOrAccountId);
+            }
+
+            email = isUserEmailMissing ? usernameOrAccountId : user.Email;
+            _userEmailCache.Add(usernameOrAccountId, email);
+            return email;
         }
 
         public string GetCustomId(string propertyName)
