@@ -106,7 +106,7 @@ namespace JiraExport
                 InitSession(config, continueOnCritical.Value());
 
                 // Migration session level settings
-                // where the logs and journal will be saved, logs aid debugging, journal is for recovery of interupted process
+                // where the logs and journal will be saved, logs aid debugging, journal is for recovery of interrupted process
                 string migrationWorkspace = config.Workspace;
 
                 var downloadOptions = (DownloadOptions)config.DownloadOptions;
