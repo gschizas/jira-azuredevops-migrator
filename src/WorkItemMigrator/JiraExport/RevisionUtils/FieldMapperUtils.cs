@@ -218,11 +218,14 @@ namespace JiraExport
             if (targetField == null)
                 return (false, null);
 
-            sourceField = SetCustomFieldName(sourceField, isCustomField, customFieldName);
-
             var hasFieldValue = r.Fields.TryGetValue(sourceField, out object value);
             if (!hasFieldValue)
-                return (false, null);
+            {
+                sourceField = SetCustomFieldName(sourceField, isCustomField, customFieldName);
+                hasFieldValue = r.Fields.TryGetValue(sourceField, out value);
+                if (!hasFieldValue)
+                    return (false, null);
+            }
 
             var iterationPathInitial = (string)value;
 
