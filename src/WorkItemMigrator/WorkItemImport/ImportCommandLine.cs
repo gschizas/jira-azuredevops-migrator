@@ -170,7 +170,7 @@ namespace WorkItemImport
                             if (wi == null)
                             {
                                 Logger.Log(LogLevel.Error, $"Tried fetching work item with id={executionItem.WiId}, " +
-                                    "but that work item does not exist on the target ADO organization/collection. " +
+                                    "but that work item does not exist on the target AzDO organization/collection. " +
                                     "Perhaps the item has been deleted manually? If so, the ItemsJournal.txt file " +
                                     "is no longer valid. Please delete the work items in the target project and " +
                                     "rerun the wi-import, or run the import with --force enabled."
@@ -215,7 +215,7 @@ namespace WorkItemImport
                             importedItems = DeferItem(importedItems, executionItem);
                         }
 
-                        // Artificial wait (optional) to avoid throttling for ADO Services
+                        // Artificial wait (optional) to avoid throttling for AzDO Services
                         if (config.SleepTimeBetweenRevisionImportMilliseconds > 0)
                         {
                             Thread.Sleep(config.SleepTimeBetweenRevisionImportMilliseconds);

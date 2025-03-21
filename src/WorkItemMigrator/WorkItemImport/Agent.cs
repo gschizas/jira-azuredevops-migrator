@@ -514,8 +514,8 @@ namespace WorkItemImport
             return null;
         }
 
-        // Ensure that classification nodes with conflicting names in ADO are migrated with unique names.
-        // ADO Classification nodes are case insensitive
+        // Ensure that classification nodes with conflicting names in AzDO are migrated with unique names.
+        // AzDO Classification nodes are case-insensitive
         private string GetMappedClassificationNodePath(Dictionary<string, string> dictionary, string name)
         {
             if (!dictionary.ContainsKey(name))
