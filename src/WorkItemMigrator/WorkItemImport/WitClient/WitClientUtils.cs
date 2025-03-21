@@ -263,7 +263,17 @@ namespace WorkItemImport
             }
             if (!rev.Fields.HasAnyByRefName(WiFieldReference.ChangedDate))
             {
-                rev.Fields.Add(new WiField() { ReferenceName = WiFieldReference.ChangedDate, Value = rev.Time.ToString("o") });
+                DateTime workItemChangedDate = (DateTime)(wi.Fields[WiFieldReference.ChangedDate]);
+                if (workItemChangedDate.ToUniversalTime() == rev.Time.ToUniversalTime())
+                {
+                    rev.Fields.Add(new WiField() { ReferenceName = WiFieldReference.ChangedDate, Value = rev.Time.AddMilliseconds(1).ToString("o") });
+                }
+                else
+                {
+                    // AzDO can add a few milliseconds to work item createdDate when adding an attachment, hence adding more here to the revision time
+                    rev.Fields.Add(new WiField() { ReferenceName = WiFieldReference.ChangedDate, Value = rev.Time.AddMilliseconds(5).ToString("o") });
+                    wi.Fields[WiFieldReference.ChangedDate] = rev.Time.AddMilliseconds(5);
+                }
             }
 
         }
