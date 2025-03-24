@@ -509,7 +509,7 @@ namespace JiraExport
                     {
                         value = string.Join(";", prop.Value.Select(st => st.ExValue<string>("$.value")).ToList());
                     }
-                    if(value.ToString().All(c => c == ';'))
+                    if (value.ToString().All(c => c == ';'))
                     {
                         // Failsafe if all other checks results in an array with correct length but empty elements
                         value = string.Join(";", prop.Value.Children().ToList());
