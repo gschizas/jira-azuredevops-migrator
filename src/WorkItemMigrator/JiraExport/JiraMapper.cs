@@ -514,6 +514,7 @@ namespace JiraExport
                 Index = r.Index,
                 Time = r.Time,
                 Author = MapUser(r.Author),
+                OriginalCommentId = r.OriginalCommentId,
                 Attachments = attachments,
                 Fields = fields,
                 Links = links,
