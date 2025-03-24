@@ -124,7 +124,7 @@ namespace WorkItemImport
                     bool datesMustIncreaseError = false;
                     foreach (Exception ex2 in ex.InnerExceptions)
                     {
-                        // Handle 'VS402625' error responses, the supplied ChangedDate was older than the latest revision already in ADO.
+                        // Handle 'VS402625' error responses, the supplied ChangedDate was older than the latest revision already in AzDO.
                         // We must bump the ChangedDate by a small factor and try again.
                         if (ex2.Message.Contains("VS402625"))
                         {
