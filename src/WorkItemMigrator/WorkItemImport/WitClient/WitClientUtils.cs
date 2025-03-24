@@ -799,7 +799,7 @@ namespace WorkItemImport
                                                                                              // This means that some attachments could have been skipped.
                     {
                         Logger.Log(LogLevel.Warning, $"Attachment '{att}' referenced in text but is missing from work item {wiItem.OriginId}/{wi.Id}. This revision will be deferred until later.");
-                        throw new AttachmentNotFoundException("Attachment not found on work item");
+                        // throw new AttachmentNotFoundException("Attachment not found on work item");
                     }
                 }
             }
