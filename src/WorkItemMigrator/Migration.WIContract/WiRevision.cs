@@ -25,6 +25,7 @@ namespace Migration.WIContract
         public string Author { get; set; }
         public DateTime Time { get; set; } = DateTime.Now;
         public int Index { get; set; } = 1;
+        public int OriginalCommentId { get; set; } = 0;
         public List<WiField> Fields { get; set; }
         public List<WiLink> Links { get; set; }
         public List<WiAttachment> Attachments { get; set; }
