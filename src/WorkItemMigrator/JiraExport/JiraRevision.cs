@@ -40,6 +40,7 @@ namespace JiraExport
 
         public string Type => ParentItem.Type;
 
+        public int OriginalCommentId { get; set; }
 
         public JiraRevision(JiraItem parentItem)
         {

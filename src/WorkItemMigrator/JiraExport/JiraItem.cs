@@ -248,11 +248,13 @@ namespace JiraExport
                 }
             }
 
+            var fields = new Dictionary<string, object> { { "comment", c.Body }, { "comment$Rendered", rc.Value<string>() } };
             return new JiraRevision(jiraItem)
             {
                 Author = author,
-                Time = c.CreatedDate.Value,
-                Fields = new Dictionary<string, object>() { { "comment", c.Body }, { "comment$Rendered", rc.Value<string>() } },
+                Time = c.CreatedDate!.Value,
+                Fields = fields,
+                OriginalCommentId = int.Parse(c.Id),
                 AttachmentActions = new List<RevisionAction<JiraAttachment>>(),
                 LinkActions = new List<RevisionAction<JiraLink>>()
             };
