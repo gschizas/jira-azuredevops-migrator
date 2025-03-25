@@ -94,6 +94,8 @@ namespace Common.Config
         [JsonProperty(PropertyName = "orphan-attachments")]
         public List<OrphanAttachment> OrphanAttachments { get; set; }
 
+        [JsonProperty(PropertyName = "force-issue-key-match")]
+        public bool ForceIssueKeyMatch { get; set; } = false;
 
     }
 }

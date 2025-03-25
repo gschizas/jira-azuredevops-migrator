@@ -387,6 +387,8 @@ namespace JiraExport
             // map issue links
             foreach (var jiraLinkAction in r.LinkActions)
             {
+                if (_config.ForceIssueKeyMatch && EnsureSameIssueKey(jiraLinkAction)) continue;
+
                 var changeType = jiraLinkAction.ChangeType == RevisionChangeType.Added ? ReferenceChangeType.Added : ReferenceChangeType.Removed;
 
                 var link = new WiLink();
@@ -423,6 +425,21 @@ namespace JiraExport
 
 
             return links;
+
+            bool EnsureSameIssueKey(RevisionAction<JiraLink> jiraLinkAction)
+            {
+                // Issue keys must match
+                var sourceIssueKey = jiraLinkAction.Value.SourceItem.Split('-')[0];
+                var targetIssueKey = jiraLinkAction.Value.TargetItem.Split('-')[0];
+                if (sourceIssueKey != targetIssueKey)
+                {
+                    Logger.Log(LogLevel.Warning,
+                        $"{jiraLinkAction.Value.SourceItem} -> {jiraLinkAction.Value.TargetItem}: Issue keys mismatch {sourceIssueKey}!={targetIssueKey}");
+                    return true;
+                }
+
+                return false;
+            }
         }
 
         internal List<WiAttachment> MapAttachments(JiraRevision rev)
