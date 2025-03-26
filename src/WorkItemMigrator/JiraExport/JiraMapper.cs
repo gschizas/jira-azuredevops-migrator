@@ -393,25 +393,23 @@ namespace JiraExport
 
                 var link = new WiLink();
 
-                if (_config.LinkMap.Links != null)
+                if (_config.LinkMap.Links == null) continue;
+
+                var linkType = (from t in _config.LinkMap.Links where t.Source == jiraLinkAction.Value.LinkType select t.Target).FirstOrDefault();
+
+                if (linkType == null) continue;
+
+                // If link is inward link, reverse the direction of the mapped link
+                if (jiraLinkAction.Value.IsInwardLink)
                 {
-                    var linkType = (from t in _config.LinkMap.Links where t.Source == jiraLinkAction.Value.LinkType select t.Target).FirstOrDefault();
-
-                    if (linkType != null)
-                    {
-                        // If link is inward link, reverse the direction of the mapped link
-                        if (jiraLinkAction.Value.IsInwardLink)
-                        {
-                            linkType = GetReverseLinkTypeReferenceName(linkType);
-                        }
-                        link.Change = changeType;
-                        link.SourceOriginId = jiraLinkAction.Value.SourceItem;
-                        link.TargetOriginId = jiraLinkAction.Value.TargetItem;
-                        link.WiType = linkType;
-
-                        links.Add(link);
-                    }
+                    linkType = GetReverseLinkTypeReferenceName(linkType);
                 }
+                link.Change = changeType;
+                link.SourceOriginId = jiraLinkAction.Value.SourceItem;
+                link.TargetOriginId = jiraLinkAction.Value.TargetItem;
+                link.WiType = linkType;
+
+                links.Add(link);
             }
 
             // map epic link
